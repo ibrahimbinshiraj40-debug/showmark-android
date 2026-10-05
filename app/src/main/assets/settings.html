@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="bn"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+html{background:#10131f}body{margin:0 auto;max-width:380px;padding:14px 18px 28px;background:#10131f;color:#fff;font-family:'Noto Sans Bengali','Nirmala UI','Segoe UI',Arial,sans-serif;font-size:14px}
+h1{margin:0 0 4px;font-size:18px;color:#ff6b6b}
+.sub{color:#aab;margin-bottom:10px;font-size:13px;line-height:1.5}
+#power{all:unset;box-sizing:border-box;display:block;width:100%;text-align:center;padding:12px;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;background:#2a3150;color:#fff}#power.on{background:#16a34a}
+#modes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}#modes button{all:unset;box-sizing:border-box;padding:9px 2px;border-radius:10px;background:#1d2236;color:#dfe6ff;cursor:pointer;font-size:13px;text-align:center;line-height:1.35}#modes button.on{background:#ff4d4d;color:#fff}
+label{display:block;margin:12px 0 5px;font-weight:bold;color:#cfe3ff}
+select{width:100%;padding:8px;border-radius:8px;border:0;font-size:14px}
+input[type=range]{width:100%}
+.sw{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.sw i{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;box-sizing:border-box}
+.sw i.sel{border-color:#fff}
+.sw input{width:30px;height:30px;border:0;padding:0;background:none;cursor:pointer}
+.row{display:flex;align-items:center;gap:8px;margin-top:11px}
+.hint{margin-top:12px;padding:10px;border-radius:8px;background:rgba(255,255,255,.08);color:#ddd;line-height:1.6;font-size:13px}
+canvas{width:100%;height:46px;background:#222;border-radius:8px;margin-top:6px}
+.btn{all:unset;box-sizing:border-box;display:block;width:100%;text-align:center;padding:9px;margin-top:7px;border-radius:8px;background:#2a3150;color:#cfe3ff;cursor:pointer;font-size:13px}.btn:hover{background:#38406a}
+.snd{display:flex;align-items:center;gap:6px;margin-top:6px;background:#1d2236;border-radius:8px;padding:5px 8px;font-size:13px}.snd span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.snd i{font-style:normal;cursor:pointer;padding:3px 7px;border-radius:6px;background:#2a3150}.snd i:hover{background:#38406a}
+.small{font-size:12px;color:#aab;line-height:1.5;margin-top:6px}
+@media (min-width:700px){body{margin:0 auto}}
+.sw i{width:34px;height:34px}#power{display:none}input[type=checkbox]{width:22px;height:22px}select{padding:11px 8px}
+#svc{margin:10px 0 4px;padding:12px;border-radius:12px;background:#1d2236}#svc p{margin:0 0 10px;line-height:1.55;color:#dfe6ff;font-size:14px}
+#svcBtn{all:unset;box-sizing:border-box;display:block;width:100%;text-align:center;padding:14px;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;background:#2a3150;color:#fff}#svcBtn.go{background:#16a34a}#svcBtn.stop{background:#c2410c}
+</style></head><body>
+<h1>ShowMark</h1>
+<div class="sub">ফোনের <b>পুরো স্ক্রিনে</b> (যেকোনো অ্যাপের ওপর) জুম বক্স, তীর, আকৃতি ও লেখা — পিসির ShowMark এর মতোই। নিচের বাটনে চালু করো, তারপর ভাসমান <b>✨</b> বাটন চাপো।</div>
+<button id="power"></button>
+<div id="svc"><p id="svcMsg"></p><button id="svcBtn"></button></div>
+
+<label>✏️ আঁকা মোডে কী করবে</label>
+<div id="modes"></div>
+
+<label>রঙ</label>
+<div class="sw" id="sw"></div>
+
+<label>দাগের মোটা: <span id="wV">5</span></label>
+<input type="range" id="width" min="1" max="24">
+<canvas id="pv" width="300" height="46"></canvas>
+
+<div class="row"><input type="checkbox" id="zoomOn"><label style="margin:0" for="zoomOn">🔍 জুম বক্স চালু</label></div>
+<div class="row"><input type="checkbox" id="zoomKeep"><label style="margin:0" for="zoomKeep">জুম চালু থাকবে (একবার জুম করার পরও আবার বন্ধ হবে না)</label></div>
+<div class="row"><input type="checkbox" id="showBubble"><label style="margin:0" for="showBubble">ভাসমান ✨ বাটন দেখাও (রেকর্ডিংয়ে না চাইলে বন্ধ করো; তখন নোটিফিকেশন থেকে জুম/আঁকা চালু করো)</label></div>
+<label>ভাসমান বাটন কতটা স্পষ্ট: <span id="baV">0.9</span></label>
+<input type="range" id="bubbleAlpha" min="0.2" max="1" step="0.05">
+<label>জুম সর্বোচ্চ কতগুণ বড়: <span id="zV">3</span></label>
+<input type="range" id="zoom" min="1" max="5" step="0.25">
+<label>জুম বক্স কত সেকেন্ড থাকবে: <span id="zsV">5</span></label>
+<input type="range" id="zoomSecs" min="1" max="15" step="0.5">
+<div class="row"><input type="checkbox" id="soundOn"><label style="margin:0" for="soundOn">জুম বক্সে হালকা সাউন্ড ইফেক্ট</label></div>
+<label>সাউন্ড কতটা জোরে: <span id="vV">0.5</span></label>
+<input type="range" id="vol" min="0.1" max="1" step="0.1">
+<div class="row"><input type="checkbox" id="dotOn"><label style="margin:0" for="dotOn">জুম সিলেক্টের সময় আঙুলের জায়গায় ছোট্ট গোল বিন্দু দেখাও</label></div>
+<div id="dotPrev" style="position:relative;height:56px;margin:6px 0;border-radius:8px;background:#2a2d45;overflow:hidden"></div>
+<label>বিন্দুর আকার: <span id="dszV">14</span></label>
+<input type="range" id="dotSize" min="4" max="40" step="1">
+<label>ঝাপসা ভাব: <span id="dblV">1</span></label>
+<input type="range" id="dotBlur" min="0" max="6" step="0.5">
+<label>কতটা স্পষ্ট (স্বচ্ছতা): <span id="dopV">0.8</span></label>
+<input type="range" id="dotOpacity" min="0.1" max="1" step="0.05">
+<label>কত পিক্সেল টানার পর বিন্দু আসবে (শুরুতে আসবে না): <span id="dafV">50</span></label>
+<input type="range" id="dotAfter" min="0" max="300" step="10">
+<label>বিন্দুর ধরন</label>
+<select id="dotShape"><option value="dot">ভরাট গোল বিন্দু</option><option value="ring">ফাঁকা গোল আংটি</option></select>
+<div class="row"><label style="margin:0">বিন্দুর রঙ</label><input type="color" id="dotColor" style="width:40px;height:30px;border:0;padding:0;background:none"></div>
+<label>জুম বক্স ফুটে ওঠার ইফেক্ট</label>
+<select id="zoomFx"><option value="random">এলোমেলো (প্রতিবার আলাদা)</option><option value="0">ক্লাসিক (উড়ে এসে বসা)</option><option value="1">স্প্রিং বাউন্স + ঢেউ</option><option value="2">৩ডি ফ্লিপ</option><option value="3">ঝাপসা থেকে স্পষ্ট</option><option value="4">পর্দা খোলা (মাঝ থেকে)</option><option value="5">নিচ থেকে স্লাইড</option><option value="6">স্পটলাইট গোল</option><option value="7">গ্লিচ কাঁপুনি</option><option value="8">ঝপ করে পড়া</option><option value="9">ফ্ল্যাশ + ডাবল ঢেউ</option><option value="10">৩ডি হেলে ওঠা</option><option value="11">স্কুইশ-স্ট্রেচ</option><option value="12">ধীরে ধীরে জুম</option><option value="13">বাম দিক থেকে জুম</option><option value="14">ডান দিক থেকে জুম</option><option value="15">উপর থেকে জুম</option><option value="16">নিচ থেকে ধীরে জুম</option><option value="17">ঘুরে ঘুরে জুম</option><option value="18">বাম থেকে পর্দা সরা</option><option value="19">ডান থেকে পর্দা সরা</option><option value="20">উপর থেকে পর্দা নামা</option><option value="21">কোণ থেকে বড় হওয়া</option><option value="22">হীরার মতো খোলা</option><option value="23">ধীরে ফুটে ওঠা</option><option value="24">স্পন্দন (ধুকপুক)</option><option value="25">বাম দিক থেকে বাউন্স</option><option value="26">ডান দিক থেকে বাউন্স</option><option value="27">উপর থেকে ঝুলে পড়া</option><option value="28">ক্যামেরা ফোকাস</option><option value="29">ডান দিক থেকে ৩ডি ফ্লিপ</option><option value="30">হেলে এসে সোজা হওয়া</option><option value="31">ঢেউসহ ধীরে জুম</option></select>
+<div class="row"><input type="checkbox" id="curtainOn"><label style="margin:0" for="curtainOn">রঙের পর্দা: আগে অরিজিনাল ফুটেজ জুম হবে, তারপর পেছনের রঙ বাম/ডান থেকে পর্দার মতো ভরে যাবে</label></div>
+<div class="small">জুম বক্স ফুটে ওঠার পর লেখা/ছবি নড়বে না — শুধু পেছনের রঙ (সাথে বর্ডার) পর্দার মতো এসে পুরো ভরবে। নিচের "অরিজিনাল" টিক দেওয়া থাকলে এটা কাজ করবে না।</div>
+<label>রঙ কোন দিক থেকে আসবে</label>
+<select id="curtainDir"><option value="random">এলোমেলো (বাম বা ডান)</option><option value="fromLeft">বাম থেকে ডানে (বাম থেকে পর্দা সরা)</option><option value="fromRight">ডান থেকে বামে (ডান থেকে পর্দা সরা)</option></select>
+<label>পর্দার ধার</label>
+<select id="curtainStyle"><option value="soft">নরম ধার (মসৃণ)</option><option value="hard">ধারালো ধার (সোজা কাটা)</option></select>
+<label>জুম শেষ হওয়ার কত সেকেন্ড পরে রঙ আসবে: <span id="cdV">0.15</span></label>
+<input type="range" id="wipeGap" min="0" max="2" step="0.05">
+<label>রঙ ভরতে কত সেকেন্ড লাগবে: <span id="csV">0.8</span></label>
+<input type="range" id="wipeSecs" min="0.2" max="2.5" step="0.1">
+<label>রঙ আসার সাউন্ড</label>
+<select id="curtainSnd"><option value="match">স্বয়ংক্রিয় (ঝিলমিল সুইপ)</option><option value="off">🔇 কোনো সাউন্ড নেই (মিউট)</option><option value="0">সোয়াইপ হুশ</option><option value="1">সিনেমাটিক রিভিল</option><option value="2">টা-ডা</option><option value="3">কাচের ঝিলিক</option><option value="4">বেস সুইশ</option><option value="5">জিপার</option><option value="6">পপ-ডিং</option><option value="7">ঝিলমিল সুইপ</option><option value="8">হুশ + বুম</option><option value="9">হুইশ / ফাস্ট সুইশ (UI পপ হুইশ)</option></select>
+<button class="btn addsnd" data-for="curtainSnd">➕ গ্যালারি/ফাইল থেকে নতুন সাউন্ড যোগ করো</button>
+
+<label>জুম বক্সের চারপাশের বর্ডারের রঙ</label>
+<div class="sw" id="zbSw"></div>
+<label>বর্ডার কত মোটা: <span id="zbV">4</span> (০ = বর্ডার নেই)</label>
+<input type="range" id="zbWidth" min="0" max="14" step="1">
+<div id="zbPrev" style="height:54px;margin:6px 0;border-radius:8px;background:#2a2d45;display:flex;align-items:center;justify-content:center"><div id="zbBox" style="width:150px;height:34px;border-radius:10px;background:#e6ff00;box-sizing:border-box"></div></div>
+<label>জুম বক্সের সাউন্ড</label>
+<select id="zoomSound"><option value="random">এলোমেলো (প্রতিবার আলাদা)</option><option value="off">🔇 কোনো সাউন্ড নেই (মিউট)</option><option value="0">নরম পপ</option><option value="1">কাচের চাইম</option><option value="2">ম্যাজিক সুইপ</option><option value="3">গভীর বুম</option><option value="4">বাবল পপ</option><option value="5">লেজার জ্যাপ</option><option value="6">ঘণ্টা</option><option value="7">হুশ + হিট</option><option value="8">হুশ-পপ</option><option value="9">ক্যামেরা শাটার</option><option value="10">ক্যাশ রেজিস্টার ক্রিং</option><option value="11">বয়ইং স্প্রিং</option><option value="12">লেভেল-আপ</option><option value="13">গভীর বুম (ভাইরাল)</option><option value="14">সিনেমাটিক রাইজার + ইমপ্যাক্ট</option><option value="15">ঝিলমিল স্পার্কল</option><option value="16">টেপ স্টপ-ডাউন</option><option value="17">ডাবল লেজার</option><option value="18">প্লিং</option><option value="19">ডিজিটাল গ্লিচ</option><option value="20">বাবল ফাটা</option><option value="21">হুইপ + ডিং</option><option value="22">বেস ড্রপ</option><option value="23">স্লাইড হুইসেল</option><option value="24">হুইশ / ফাস্ট সুইশ (UI পপ হুইশ)</option></select>
+<button class="btn addsnd" data-for="zoomSound">➕ গ্যালারি/ফাইল থেকে নতুন সাউন্ড যোগ করো</button>
+<label>আমার যোগ করা সাউন্ড (দুই জায়গাতেই বাছা যাবে)</label>
+<div id="mySnd"></div>
+<div class="small" id="sndMsg">mp3 / wav / ogg / m4a — প্রতিটা ৬ MB পর্যন্ত, সর্বোচ্চ ১০ সেকেন্ড বাজবে। যোগ করা সাউন্ড সবসময় সেভ থাকে।</div>
+<div class="row"><input type="checkbox" id="zoomOrig"><label style="margin:0" for="zoomOrig">অরিজিনাল: স্ক্রিনে যেমন আছে হুবহু তেমন (রঙ বদল ছাড়া)</label></div>
+<div class="row"><label style="margin:0">জুম বক্সের পেছনের রঙ</label><input type="color" id="zoomColor" style="width:40px;height:30px;border:0;padding:0;background:none"></div>
+
+<label>দাগ শুরুর জন্য কত সেকেন্ড ধরে রাখবে: <span id="hV">0.35</span></label>
+<input type="range" id="hold" min="0.1" max="1" step="0.05">
+
+<label>কত সেকেন্ড পর মুছে যাবে: <span id="sV">3</span></label>
+<input type="range" id="secs" min="1" max="10" step="0.5">
+
+<label>সোজা দাগ টানলে</label>
+<select id="arrow"><option value="arrow">মাথাসহ তীর চিহ্ন</option><option value="line">শুধু সোজা দাগ</option></select>
+<label>তীরের অ্যানিমেশন</label>
+<select id="arrowAnim"><option value="random">এলোমেলো (প্রতিবার আলাদা)</option><option value="0">ঝপ + ঢেউ-রিং</option><option value="1">ধূমকেতু</option><option value="2">স্প্রিং ছুট</option><option value="3">জ্বলজ্বল পালস</option><option value="4">ঝিকিমিকি তারা</option><option value="5">সাপের মতো</option><option value="6">নিয়ন গ্লো</option><option value="7">রংধনু</option><option value="8">ড্যাশ-ড্যাশ চলা</option><option value="9">বিন্দুর সারি</option><option value="10">বিদ্যুৎ ঝলক</option><option value="11">মাথা থেকে ঢেউ</option><option value="12">উল্টো দিক থেকে টান</option><option value="13">দ্বিগুণ রেখা মিলে যাওয়া</option><option value="14">ধীরে আঁকা</option><option value="15">হার্টবিট</option><option value="16">ঝিলিক সোয়াইপ</option><option value="17">লাফানো মাথা</option><option value="18">ঘূর্ণি মাথা</option><option value="19">আগুনের স্ফুলিঙ্গ</option><option value="20">রাবার ব্যান্ড</option><option value="21">স্টপ-মোশন ধাপে ধাপে</option></select>
+
+<div class="row"><input type="checkbox" id="fill"><label style="margin:0" for="fill">চার কোনা/গোলের ভেতরে হালকা রঙ</label></div>
+
+<div class="hint">• <b>✨ বাটন</b> চাপলে মেনু খোলে: 🔍 জুম, ✏️ আঁকা, 🧹 মুছো, ⚙️ সেটিং, ✕ বন্ধ। বাটন টেনে যেকোনো জায়গায় সরানো যায়।<br>
+• <b>🔍 জুম</b> বেছে আঙুল দিয়ে টেনে চার কোনা সিলেক্ট করো, ছাড়লেই বড় ইফেক্টসহ জুম বক্স ফুটে উঠবে। একবার জুমের পর নিজে থেকে বন্ধ হয় (চাইলে "জুম চালু থাকবে" টিক দাও)।<br>
+• <b>✏️ আঁকা</b> চালু থাকলে আঙুল চেপে টানলেই সুন্দর তীর/গোল/চার কোনা হয়; লেখা মোডে হাতে লিখলে সুন্দর লেখা হয় (ইন্টারনেট লাগে)। শেষ করতে ✨ বাটন চাপো।<br>
+• জুম বা আঁকা চালু থাকলে নিচের অ্যাপে আঙুল পৌঁছায় না; বন্ধ করলে সব আগের মতো।<br>
+• নোটিফিকেশনের বাটন (জুম / আঁকা / মুছো) দিয়েও চালানো যায়।<br>
+• ব্যাংকিং/সিকিউর অ্যাপের স্ক্রিনশট কালো আসতে পারে — এটা Android এর নিয়ম।</div>
+<script src="android-shim.js"></script>
+<script src="settings.js"></script>
+<script src="android-settings.js"></script>
+</body></html>
