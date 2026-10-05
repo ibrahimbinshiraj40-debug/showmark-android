@@ -65,6 +65,7 @@ function zbColors() {
 
 smchrome.storage.local.get(DEF, (r) => {
   cfg = Object.assign({}, DEF, r);
+  cfg.zoomSecs = Math.max(5, Math.min(120, Number(cfg.zoomSecs) || 5));
   renderSounds();
   $("zoomOn").checked = !!cfg.zoomOn; $("zoom").value = cfg.zoom; $("zV").textContent = cfg.zoom; $("zoomSecs").value = cfg.zoomSecs; $("zsV").textContent = cfg.zoomSecs; $("zoomColor").value = cfg.zoomColor; $("soundOn").checked = !!cfg.soundOn; $("zoomOrig").checked = !!cfg.zoomOrig; $("zoomColor").disabled = !!cfg.zoomOrig; $("vol").value = cfg.vol; $("vV").textContent = cfg.vol;
   $("hold").value = cfg.hold / 1000; $("hV").textContent = cfg.hold / 1000;

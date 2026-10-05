@@ -571,16 +571,20 @@
   root.appendChild(zfx);
   let lastFx = -1;
   const FX_N = 32;
+  // ৫ সেকেন্ড থেকে ২ মিনিট: পুরো নির্বাচিত zoom effect এই সময় ধরে ধীরে চলে।
+  const animTotalMs = () => Math.max(5000, Math.min(120000, (Number(cfg.zoomSecs) || 5) * 1000));
   function ring(el, left, top, w, h, delay) {
     const g = document.createElement("div"); g.className = "rg";
     g.style.cssText = "left:" + left + "px;top:" + top + "px;width:" + w + "px;height:" + h + "px;border-color:" + (cfg.zoomColor || "#e6ff00") + ";";
     root.insertBefore(g, el);
-    const an = g.animate([{ transform: "scale(1)", opacity: 0 }, { transform: "scale(1.08)", opacity: 0.9, offset: 0.15 }, { transform: "scale(1.42)", opacity: 0 }], { duration: 680, delay: delay || 0, easing: "ease-out", fill: "backwards" });
+    const an = g.animate([{ transform: "scale(1)", opacity: 0 }, { transform: "scale(1.08)", opacity: 0.9, offset: 0.15 }, { transform: "scale(1.42)", opacity: 0 }], { duration: Math.min(1800, animTotalMs()), delay: delay || 0, easing: "ease-out", fill: "backwards" });
     an.onfinish = () => g.remove();
   }
   function playFx(i, el, r, s, w2, h2, left, top, cx, cy) {
     const P = "perspective(900px) ";
-    const run = (frames, ms, ease) => el.animate(frames, { duration: ms, easing: ease || "cubic-bezier(.2,.9,.3,1)" });
+    // ব্যবহারকারীর নির্বাচিত সময়টাই এখন পুরো zoom-animation transition-এর সময়।
+    // ৫ সেকেন্ড থেকে ২ মিনিট পর্যন্ত একই effect ধীরে ও মসৃণভাবে চলে।
+    const run = (frames, ms, ease) => el.animate(frames, { duration: animTotalMs(), easing: ease || "cubic-bezier(.2,.9,.3,1)" });
     if (i === 1) { // স্প্রিং বাউন্স + ঢেউ
       run([{ transform: "scale(.15)", opacity: 0 }, { transform: "scale(1.14)", opacity: 1, offset: 0.38 }, { transform: "scale(.94)", offset: 0.58 }, { transform: "scale(1.04)", offset: 0.76 }, { transform: "scale(.99)", offset: 0.9 }, { transform: "scale(1)" }], 640, "ease-out");
       ring(el, left, top, w2, h2, 120);
@@ -686,7 +690,7 @@
   function runWipe(wp, zoomMs) {
     const gp = Number(cfg.wipeGap), u = Number(cfg.wipeSecs);
     const gap = Math.max(0, isNaN(gp) ? 0.15 : gp), dur = Math.max(0.2, isNaN(u) ? 0.8 : u);
-    const delay = zoomMs / 1000 + gap; // জুম শেষ হওয়ার পর
+    const delay = Math.min(0.85, zoomMs / 1000) + gap; // দীর্ঘ অ্যানিমেশনেও শুরুতেই পর্দা আসবে
     let fin = false;
     const finalize = () => {
       if (fin) return; fin = true;

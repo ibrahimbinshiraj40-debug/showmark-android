@@ -47,8 +47,8 @@ canvas{width:100%;height:46px;background:#222;border-radius:8px;margin-top:6px}
 <input type="range" id="bubbleAlpha" min="0.2" max="1" step="0.05">
 <label>জুম সর্বোচ্চ কতগুণ বড়: <span id="zV">3</span></label>
 <input type="range" id="zoom" min="1" max="5" step="0.25">
-<label>জুম বক্স কত সেকেন্ড থাকবে: <span id="zsV">5</span></label>
-<input type="range" id="zoomSecs" min="1" max="15" step="0.5">
+<label>জুম/অ্যানিমেশন কত সেকেন্ড ধীরে ধীরে চলবে: <span id="zsV">5</span></label>
+<input type="range" id="zoomSecs" min="5" max="120" step="1">
 <div class="row"><input type="checkbox" id="soundOn"><label style="margin:0" for="soundOn">জুম বক্সে হালকা সাউন্ড ইফেক্ট</label></div>
 <label>সাউন্ড কতটা জোরে: <span id="vV">0.5</span></label>
 <input type="range" id="vol" min="0.1" max="1" step="0.1">
@@ -72,7 +72,7 @@ canvas{width:100%;height:46px;background:#222;border-radius:8px;margin-top:6px}
 <label>জুম বক্স ফুটে ওঠার ইফেক্ট</label>
 <select id="zoomFx"><option value="random">এলোমেলো (প্রতিবার আলাদা)</option><option value="0">ক্লাসিক (উড়ে এসে বসা)</option><option value="1">স্প্রিং বাউন্স + ঢেউ</option><option value="2">৩ডি ফ্লিপ</option><option value="3">ঝাপসা থেকে স্পষ্ট</option><option value="4">পর্দা খোলা (মাঝ থেকে)</option><option value="5">নিচ থেকে স্লাইড</option><option value="6">স্পটলাইট গোল</option><option value="7">গ্লিচ কাঁপুনি</option><option value="8">ঝপ করে পড়া</option><option value="9">ফ্ল্যাশ + ডাবল ঢেউ</option><option value="10">৩ডি হেলে ওঠা</option><option value="11">স্কুইশ-স্ট্রেচ</option><option value="12">ধীরে ধীরে জুম</option><option value="13">বাম দিক থেকে জুম</option><option value="14">ডান দিক থেকে জুম</option><option value="15">উপর থেকে জুম</option><option value="16">নিচ থেকে ধীরে জুম</option><option value="17">ঘুরে ঘুরে জুম</option><option value="18">বাম থেকে পর্দা সরা</option><option value="19">ডান থেকে পর্দা সরা</option><option value="20">উপর থেকে পর্দা নামা</option><option value="21">কোণ থেকে বড় হওয়া</option><option value="22">হীরার মতো খোলা</option><option value="23">ধীরে ফুটে ওঠা</option><option value="24">স্পন্দন (ধুকপুক)</option><option value="25">বাম দিক থেকে বাউন্স</option><option value="26">ডান দিক থেকে বাউন্স</option><option value="27">উপর থেকে ঝুলে পড়া</option><option value="28">ক্যামেরা ফোকাস</option><option value="29">ডান দিক থেকে ৩ডি ফ্লিপ</option><option value="30">হেলে এসে সোজা হওয়া</option><option value="31">ঢেউসহ ধীরে জুম</option></select>
 <div class="row"><input type="checkbox" id="curtainOn"><label style="margin:0" for="curtainOn">রঙের পর্দা: আগে অরিজিনাল ফুটেজ জুম হবে, তারপর পেছনের রঙ বাম/ডান থেকে পর্দার মতো ভরে যাবে</label></div>
-<div class="small">জুম বক্স ফুটে ওঠার পর লেখা/ছবি নড়বে না — শুধু পেছনের রঙ (সাথে বর্ডার) পর্দার মতো এসে পুরো ভরবে। নিচের "অরিজিনাল" টিক দেওয়া থাকলে এটা কাজ করবে না।</div>
+<div class="small">নির্বাচিত অংশটি মূল screen recording-এর ওপরেই থাকবে এবং নির্বাচিত effect অনুযায়ী পুরো নির্ধারিত সময়জুড়ে ধীরে ধীরে animate হবে। ৫ সেকেন্ড থেকে সর্বোচ্চ ২ মিনিট।<br>জুম বক্স ফুটে ওঠার পর লেখা/ছবি নড়বে না — শুধু পেছনের রঙ (সাথে বর্ডার) পর্দার মতো এসে পুরো ভরবে। নিচের "অরিজিনাল" টিক দেওয়া থাকলে এটা কাজ করবে না।</div>
 <label>রঙ কোন দিক থেকে আসবে</label>
 <select id="curtainDir"><option value="random">এলোমেলো (বাম বা ডান)</option><option value="fromLeft">বাম থেকে ডানে (বাম থেকে পর্দা সরা)</option><option value="fromRight">ডান থেকে বামে (ডান থেকে পর্দা সরা)</option></select>
 <label>পর্দার ধার</label>
