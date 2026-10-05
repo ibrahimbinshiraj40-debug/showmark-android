@@ -383,7 +383,7 @@
   let zsel = null;
   function zselRemove() { if (zsel) { zsel.el.remove(); zsel = null; } }
   function zselShow(d) {
-    if (zsel || cfg.dotOn === false) return;
+    if (zsel || cfg.dotOn === false || window.__smNoDot) return;
     const sz = Math.max(4, Math.min(60, Number(cfg.dotSize) || 14)), mo = Math.max(0.1, Math.min(1, Number(cfg.dotOpacity) || 0.8));
     const bl = Math.max(0, Math.min(8, Number(cfg.dotBlur))), col = cfg.dotColor || "#e6ff00", ring_ = cfg.dotShape === "ring";
     const el = document.createElement("div"); el.className = "dt";

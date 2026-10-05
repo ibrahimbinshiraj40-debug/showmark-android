@@ -3,6 +3,7 @@
 (function () {
   var B = window.AndroidBridge;
   window.__smMode = 0;
+  window.__smNoDot = true; // ফোনে নিজস্ব বিন্দু+দাগ আছে, তাই overlay.js এর হলুদ বিন্দু দেখানো বন্ধ
   var cur = null;
 
   // ---- জুমের সময় আঙুল নিচে, বিন্দু ওপরে (ছবি এডিটরের ইরেজারের মতো) ----
@@ -44,7 +45,7 @@
   }
   function hdIdle() {
     if (lastX === null) { lastX = (window.innerWidth || 360) / 2; lastY = (window.innerHeight || 640) * 0.62; }
-    hdShowAt(lastX, lastY);
+    hdShowAt(lastX, lastY); hdColor(false);
   }
   // overlay.js: ধরে রাখা পূর্ণ হলে স্ক্রিনশটের আগে হ্যান্ডেল লুকায়, ছবি তোলা শেষ হলে আবার দেখায়
   // (হ্যান্ডেল দেখা অবস্থায় ছবি তুললে সেটাই জুমের ছবিতে উঠে যেত)
@@ -54,35 +55,20 @@
     hdShowAt(cur.lx, cur.ly);
   };
 
+  function hdColor(red) { if (hd) hd.tg.style.background = red ? "#ff1f1f" : "rgba(255,230,0,.95)"; }
+  var AIM_MS = 150;   // বিন্দু এক জায়গায় এতক্ষণ ধরে রাখলে লাল হয়ে সিলেক্ট শুরু হয়
+  var AIM_TOL = 10;   // এর চেয়ে কম নড়লে "স্থির" ধরা হয় (px)
+
   function send(type, button, x, y, buttons) {
     window.__smMouse({ type: type, button: button, x: x, y: y, buttons: buttons, ctrlKey: false });
   }
-  function finishCur(e, cancel) {
-    if (!cur) return;
-    var c = cur; cur = null; clearTimeout(c.timer);
-    hdHide();
-    if (c.off) { lastX = c.lx; lastY = c.ly; }
-    var x = e ? e.clientX : c.lx, y = e ? e.clientY : c.ly;
-    if (c.off) y = mapY(y);
-    if (!c.live && c.pend && !cancel) send("move", 0, c.pend[0], c.pend[1], c.bit);
-    send("up", c.btn, x, y, 0);
-    // জুম হলে মোড নিজেই বন্ধ হয়ে যায়; না হলে (ছোট টাচ/বাতিল) 🔍 মোডে থাকে, তাই হ্যান্ডেল আবার দেখাও
-    if (c.off && window.__smMode === 1 && (!c.moved || cancel)) hdIdle();
-    try { B.gestureEnd(!!c.moved && !cancel); } catch (err) {}
-  }
-  window.__smSetMode = function (m) {
-    if (cur) finishCur(null, true);
-    window.__smMode = m;
-    if (m === 1 && OFF > 0) hdIdle(); else hdHide(); // 🔍 চাপার সাথে সাথেই বিন্দু + দাগ এসে যায়
-  };
-
-  function onDown(e) {
-    if (!window.__smMode || cur) return;
-    e.preventDefault();
-    var zoom = window.__smMode === 1;
-    cur = { id: e.pointerId, btn: zoom ? 2 : 0, bit: zoom ? 2 : 1, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY, moved: false, pend: null, live: false, timer: 0, off: zoom && OFF > 0 };
-    if (cur.off) hdShowAt(e.clientX, e.clientY); // আঙুল যেখানে, হ্যান্ডেল সেখানে চলে আসে
-    send("down", cur.btn, e.clientX, cur.off ? mapY(e.clientY) : e.clientY, cur.bit);
+  // বিন্দু লাল হলো: এখান থেকে সিলেক্ট শুরু (overlay.js কে "ডান বাটন চাপা" ইভেন্ট পাঠাই)
+  function startSel() {
+    if (!cur || cur.phase === "sel") return;
+    cur.phase = "sel";
+    cur.sx = cur.lx; cur.sy = cur.ly; cur.moved = false;
+    hdColor(true);
+    send("down", cur.btn, cur.lx, cur.off ? mapY(cur.ly) : cur.ly, cur.bit);
     // শুরুর ~৮০ms এর নড়াচড়া ধরে রাখি, নইলে overlay.js ভাবে "ধরে রাখার আগেই টেনেছে" আর বাতিল করে দেয়
     cur.timer = setTimeout(function () {
       if (!cur) return;
@@ -90,13 +76,59 @@
       if (cur.pend) { send("move", 0, cur.pend[0], cur.pend[1], cur.bit); cur.pend = null; }
     }, 80);
   }
+  function finishCur(e, cancel) {
+    if (!cur) return;
+    var c = cur; cur = null; clearTimeout(c.timer); clearTimeout(c.aim);
+    hdHide();
+    if (c.off) { lastX = c.lx; lastY = c.ly; }
+    if (c.phase === "aim") { // বিন্দু লাল হওয়ার আগেই আঙুল তুলেছে: শুধু বিন্দুর জায়গা বদলেছে, জুম নয়
+      if (c.off && window.__smMode === 1) hdIdle();
+      try { B.gestureEnd(false); } catch (err) {}
+      return;
+    }
+    var x = e ? e.clientX : c.lx, y = e ? e.clientY : c.ly;
+    if (c.off) y = mapY(y);
+    if (!c.live && c.pend && !cancel) send("move", 0, c.pend[0], c.pend[1], c.bit);
+    send("up", c.btn, x, y, 0);
+    // জুম হলে মোড নিজেই বন্ধ হয় (হ্যান্ডেলও চলে যায়); না হলে 🔍 মোডেই থাকে, তাই বিন্দু আবার হলুদ হয়ে ফেরে
+    if (c.off && window.__smMode === 1 && (!c.moved || cancel)) hdIdle();
+    try { B.gestureEnd(!!c.moved && !cancel); } catch (err) {}
+  }
+  window.__smSetMode = function (m) {
+    if (cur) finishCur(null, true);
+    window.__smMode = m;
+    if (m === 1 && OFF > 0) hdIdle(); else hdHide(); // 🔍 চাপার সাথে সাথেই বিন্দু + দাগ এসে যায়, জুম হওয়া পর্যন্ত থাকে
+  };
+
+  function onDown(e) {
+    if (!window.__smMode || cur) return;
+    e.preventDefault();
+    var zoom = window.__smMode === 1;
+    cur = { id: e.pointerId, btn: zoom ? 2 : 0, bit: zoom ? 2 : 1, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY, moved: false, pend: null, live: false, timer: 0, aim: 0, off: zoom && OFF > 0, phase: "sel" };
+    if (cur.off) {
+      // জুম মোড: আগে বিন্দু সরিয়ে ঠিক জায়গায় আনা (aim), এক জায়গায় ০.১৫ সেকেন্ড স্থির থাকলে লাল হয়ে সিলেক্ট শুরু (sel)
+      cur.phase = "aim"; cur.ax = e.clientX; cur.ay = e.clientY;
+      hdShowAt(e.clientX, e.clientY); hdColor(false);
+      cur.aim = setTimeout(startSel, AIM_MS);
+    } else {
+      cur.phase = "aim"; startSel();
+    }
+  }
   function onMove(e) {
     if (!cur || e.pointerId !== cur.id) return;
     e.preventDefault();
     cur.lx = e.clientX; cur.ly = e.clientY;
-    if (Math.hypot(e.clientX - cur.sx, e.clientY - cur.sy) > 14) cur.moved = true;
     var ty = cur.off ? mapY(e.clientY) : e.clientY;
     if (cur.off && hd && hd.w.style.display === "block") hdPlace(e.clientX, e.clientY, e.clientX, ty);
+    if (cur.phase === "aim") {
+      // এখনো বিন্দু সরানো হচ্ছে: নড়তে থাকলে টাইমার আবার গোড়া থেকে
+      if (Math.hypot(e.clientX - cur.ax, e.clientY - cur.ay) > AIM_TOL) {
+        cur.ax = e.clientX; cur.ay = e.clientY;
+        clearTimeout(cur.aim); cur.aim = setTimeout(startSel, AIM_MS);
+      }
+      return;
+    }
+    if (Math.hypot(e.clientX - cur.sx, e.clientY - cur.sy) > 14) cur.moved = true;
     if (!cur.live) { cur.pend = [e.clientX, ty]; return; }
     send("move", 0, e.clientX, ty, cur.bit);
   }

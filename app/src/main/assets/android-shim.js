@@ -24,7 +24,7 @@
           var st = parse(B.getSettings(), {});
           Object.keys(defs || {}).forEach(function (k) { if (k.indexOf("smsnd_") === 0) st[k] = B.getBlob(k); });
           var r = Object.assign({}, defs, st);
-          if (isOverlay) { r.tool = "auto"; r.hold = 150; } // ০.১৫ সেকেন্ড ধরে রাখলে ওই জায়গা থেকে জুম সিলেক্ট শুরু
+          if (isOverlay) { r.tool = "auto"; r.hold = 60; } // ধরে রাখার সময় android-overlay.js নিজে দেখে (বিন্দু লাল হওয়ার সময়), তাই এখানে সবচেয়ে কম
           cb(r);
         },
         set: function (obj) {
