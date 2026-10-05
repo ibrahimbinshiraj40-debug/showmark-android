@@ -431,7 +431,8 @@
     d.timer = setTimeout(() => {
       if (zdrag !== d) return;
       d.prog && d.prog();
-      d.pre = precapture(); // ডেস্কটপে সাধারণ ডান-ক্লিকে স্ক্রিনশট নষ্ট না করতে, হোল্ড পূর্ণ হলেই তোলা হয়
+      d.pre = precapture(); d.pre.promise.then(() => { if (zdrag === d && window.__smHandleShow) window.__smHandleShow(); });
+      // ডেস্কটপে সাধারণ ডান-ক্লিকে স্ক্রিনশট নষ্ট না করতে, হোল্ড পূর্ণ হলেই তোলা হয়
       d.active = true; setDrawAttr(true); setHideAttr(true);
       try { window.getSelection().removeAllRanges(); } catch (_) {}
       d.ready = !(d.pre && d.pre.promise);
@@ -548,8 +549,9 @@
       let wp = null;
       if (cfg.curtainOn && !cfg.zoomOrig) {
         // আগে শুধু অরিজিনাল; তার ওপরে মাস্ক-স্তর (রঙ + শার্প লেখা + বর্ডার) যা পরে বাম/ডান থেকে খুলে যায়
-        el.appendChild(mkInner(true));
-        wp = makeWipe(); wp.el.appendChild(mkInner(false)); wp.el.appendChild(yl); wp.el.appendChild(bd);
+        const baseLayer = mkInner(true);
+        el.appendChild(baseLayer);
+        wp = makeWipe(); wp.base = baseLayer; wp.el.appendChild(mkInner(false)); wp.el.appendChild(yl); wp.el.appendChild(bd);
         el.appendChild(wp.el);
       } else {
         el.appendChild(mkInner(!!cfg.zoomOrig)); if (!cfg.zoomOrig) el.appendChild(yl);
@@ -681,10 +683,17 @@
     const gp = Number(cfg.wipeGap), u = Number(cfg.wipeSecs);
     const gap = Math.max(0, isNaN(gp) ? 0.15 : gp), dur = Math.max(0.2, isNaN(u) ? 0.8 : u);
     const delay = zoomMs / 1000 + gap; // জুম শেষ হওয়ার পর
+    let fin = false;
+    const finalize = () => {
+      if (fin) return; fin = true;
+      wp.el.style.cssText = "";                       // মাস্ক সরাও: ওপরের স্তর এখন পুরো অপাক
+      if (wp.base && wp.base.parentNode) wp.base.remove(); // নিচের ঝাপসা অরিজিনাল স্তর মুছে দাও — আর দুই লেয়ার দেখা যাবে না
+    };
     try {
       const an = wp.el.animate([{ maskPosition: wp.p0, webkitMaskPosition: wp.p0 }, { maskPosition: wp.p1, webkitMaskPosition: wp.p1 }], { duration: dur * 1000, delay: delay * 1000, easing: "cubic-bezier(.55,0,.25,1)", fill: "both" });
-      an.onfinish = () => { wp.el.style.cssText = ""; try { an.cancel(); } catch (_) {} };
-    } catch (_) { wp.el.style.cssText = ""; }
+      an.onfinish = () => { finalize(); try { an.cancel(); } catch (_) {} };
+    } catch (_) { finalize(); }
+    setTimeout(finalize, (delay + dur) * 1000 + 250); // ফোনের WebView এ onfinish না এলেও যেন মুছে যায়
     curtainSound(delay, dur);
   }
   function popZoom(el, r, s, w2, h2, left, top, cx, cy, wp) {
