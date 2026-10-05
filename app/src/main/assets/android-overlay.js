@@ -7,10 +7,17 @@
   var cur = null;
 
   // ---- জুমের সময় আঙুল নিচে, বিন্দু ওপরে (ছবি এডিটরের ইরেজারের মতো) ----
+  var AIM_MS = 300;   // বিন্দু এক জায়গায় এতক্ষণ (ms) ধরে রাখলে লাল হয়ে সিলেক্ট শুরু হয় (সেটিং থেকে বদলায়)
   var OFF = 110; // আঙুল থেকে বিন্দু কত px ওপরে (সেটিং থেকে বদলায়, ০ = বন্ধ)
   try {
-    smchrome.storage.local.get({ zoomOff: 110 }, function (r) { var v = Number(r.zoomOff); OFF = isNaN(v) ? 110 : Math.max(0, v); });
-    smchrome.storage.onChanged.addListener(function (ch) { if (ch.zoomOff) { var v = Number(ch.zoomOff.newValue); OFF = isNaN(v) ? 110 : Math.max(0, v); } });
+    smchrome.storage.local.get({ zoomOff: 110, aimMs: 300 }, function (r) {
+      var v = Number(r.zoomOff); OFF = isNaN(v) ? 110 : Math.max(0, v);
+      var a = Number(r.aimMs); AIM_MS = isNaN(a) ? 300 : Math.max(50, a);
+    });
+    smchrome.storage.onChanged.addListener(function (ch) {
+      if (ch.zoomOff) { var v = Number(ch.zoomOff.newValue); OFF = isNaN(v) ? 110 : Math.max(0, v); }
+      if (ch.aimMs) { var a = Number(ch.aimMs.newValue); AIM_MS = isNaN(a) ? 300 : Math.max(50, a); }
+    });
   } catch (err) {}
   // আঙুলের জায়গা -> আসল বিন্দুর জায়গা। স্ক্রিনের নিচের দিকে অফসেট কমে আসে, যাতে একদম নিচের অংশও সিলেক্ট করা যায়।
   function mapY(y) {
@@ -56,7 +63,7 @@
   };
 
   function hdColor(red) { if (hd) hd.tg.style.background = red ? "#ff1f1f" : "rgba(255,230,0,.95)"; }
-  var AIM_MS = 150;   // বিন্দু এক জায়গায় এতক্ষণ ধরে রাখলে লাল হয়ে সিলেক্ট শুরু হয়
+  
   var AIM_TOL = 10;   // এর চেয়ে কম নড়লে "স্থির" ধরা হয় (px)
 
   function send(type, button, x, y, buttons) {

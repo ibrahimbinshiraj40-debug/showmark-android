@@ -1,6 +1,6 @@
 // ShowMark Desktop সেটিং উইন্ডো (সেটিং main প্রসেসে সংরক্ষিত হয়)
 const $ = (id) => document.getElementById(id);
-const DEF = { tool: "none", lastTool: "auto", color: "#ff2d2d", width: 5, secs: 3, arrow: "arrow", fill: false, mode: "shape", hold: 350, zoomOn: true, zoom: 3, zoomSecs: 5, zoomColor: "#e6ff00", soundOn: true, vol: 0.5, zoomOrig: false, zoomSound: "random", arrowAnim: "random", zoomFx: "random", zbColor: "#e11d1d", zbWidth: 4, curtainOn: false, curtainDir: "random", curtainStyle: "soft", curtainSnd: "match", wipeGap: 0.15, wipeSecs: 0.8, dotOn: true, dotSize: 14, dotBlur: 1, dotOpacity: 0.8, dotShape: "dot", dotColor: "#e6ff00", dotAfter: 50, zoomOff: 110, customSounds: [] };
+const DEF = { tool: "none", lastTool: "auto", color: "#ff2d2d", width: 5, secs: 3, arrow: "arrow", fill: false, mode: "shape", hold: 350, zoomOn: true, zoom: 3, zoomSecs: 5, zoomColor: "#e6ff00", soundOn: true, vol: 0.5, zoomOrig: false, zoomSound: "random", arrowAnim: "random", zoomFx: "random", zbColor: "#e11d1d", zbWidth: 4, curtainOn: false, curtainDir: "random", curtainStyle: "soft", curtainSnd: "match", wipeGap: 0.15, wipeSecs: 0.8, dotOn: true, dotSize: 14, dotBlur: 1, dotOpacity: 0.8, dotShape: "dot", dotColor: "#e6ff00", dotAfter: 50, zoomOff: 110, aimMs: 300, customSounds: [] };
 const COLORS = ["#ff2d2d", "#1e6bff", "#17c964", "#ffd400", "#ff8a00", "#ff3dbb", "#ffffff", "#111111"];
 let cfg = Object.assign({}, DEF);
 
@@ -70,7 +70,7 @@ smchrome.storage.local.get(DEF, (r) => {
   $("hold").value = cfg.hold / 1000; $("hV").textContent = cfg.hold / 1000;
   $("arrow").value = cfg.arrow; $("zoomSound").value = String(cfg.zoomSound); $("arrowAnim").value = String(cfg.arrowAnim); $("zoomFx").value = String(cfg.zoomFx);
   $("dotOn").checked = cfg.dotOn !== false; $("dotSize").value = cfg.dotSize; $("dszV").textContent = cfg.dotSize; $("dotBlur").value = cfg.dotBlur; $("dblV").textContent = cfg.dotBlur;
-  $("dotOpacity").value = cfg.dotOpacity; $("dopV").textContent = cfg.dotOpacity; $("dotShape").value = cfg.dotShape; $("dotColor").value = cfg.dotColor; $("dotAfter").value = cfg.dotAfter; $("dafV").textContent = cfg.dotAfter; $("zoomOff").value = cfg.zoomOff; $("zoV").textContent = cfg.zoomOff; dotPrev();
+  $("dotOpacity").value = cfg.dotOpacity; $("dopV").textContent = cfg.dotOpacity; $("dotShape").value = cfg.dotShape; $("dotColor").value = cfg.dotColor; $("dotAfter").value = cfg.dotAfter; $("dafV").textContent = cfg.dotAfter; $("aimMs").value = cfg.aimMs; $("amV").textContent = cfg.aimMs; $("zoomOff").value = cfg.zoomOff; $("zoV").textContent = cfg.zoomOff; dotPrev();
   $("width").value = cfg.width; $("wV").textContent = cfg.width;
   $("secs").value = cfg.secs; $("sV").textContent = cfg.secs;
   $("fill").checked = !!cfg.fill;
@@ -109,6 +109,7 @@ $("dotBlur").addEventListener("input", () => { $("dblV").textContent = $("dotBlu
 $("dotOpacity").addEventListener("input", () => { $("dopV").textContent = $("dotOpacity").value; save("dotOpacity", Number($("dotOpacity").value)); dotPrev(); });
 $("dotShape").addEventListener("change", () => { save("dotShape", $("dotShape").value); dotPrev(); });
 $("dotColor").addEventListener("input", () => { save("dotColor", $("dotColor").value); dotPrev(); });
+$("aimMs").addEventListener("input", () => { $("amV").textContent = $("aimMs").value; save("aimMs", Number($("aimMs").value)); });
 $("zoomOff").addEventListener("input", () => { $("zoV").textContent = $("zoomOff").value; save("zoomOff", Number($("zoomOff").value)); });
 $("dotAfter").addEventListener("input", () => { $("dafV").textContent = $("dotAfter").value; save("dotAfter", Number($("dotAfter").value)); });
 $("zbWidth").addEventListener("input", () => { $("zbV").textContent = $("zbWidth").value; save("zbWidth", Number($("zbWidth").value)); zbPrev(); });
