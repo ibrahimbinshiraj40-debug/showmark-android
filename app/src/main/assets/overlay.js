@@ -431,7 +431,11 @@
     d.timer = setTimeout(() => {
       if (zdrag !== d) return;
       d.prog && d.prog();
-      d.pre = precapture(); d.pre.promise.then(() => { if (zdrag === d && window.__smHandleShow) window.__smHandleShow(); });
+      // হ্যান্ডেল (থাকলে) আগে লুকিয়ে ফেলি, তারপর স্ক্রিনশট তুলি, শেষে হ্যান্ডেল ফেরত আনি
+      if (window.__smHandleHide) window.__smHandleHide();
+      const o = {}; d.pre = o;
+      o.promise = new Promise((res) => setTimeout(() => { const p = precapture(); p.promise.then((img) => { o.url = p.url; res(img); }); }, window.__smHandleHide ? 70 : 0));
+      o.promise.then(() => { if (zdrag === d && window.__smHandleShow) window.__smHandleShow(); });
       // ডেস্কটপে সাধারণ ডান-ক্লিকে স্ক্রিনশট নষ্ট না করতে, হোল্ড পূর্ণ হলেই তোলা হয়
       d.active = true; setDrawAttr(true); setHideAttr(true);
       try { window.getSelection().removeAllRanges(); } catch (_) {}

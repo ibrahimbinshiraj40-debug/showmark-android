@@ -36,12 +36,22 @@
     hd.fg.style.left = fx + "px"; hd.fg.style.top = fy + "px";
   }
   function hdHide() { if (hd) hd.w.style.display = "none"; }
-  // overlay.js স্ক্রিনশট তোলা শেষ হলে এটা ডাকে (আগে দেখালে হ্যান্ডেলটাই জুমের ছবিতে উঠে যেত)
-  window.__smHandleShow = function () {
-    if (!cur || !cur.off) return;
+  var lastX = null, lastY = null; // হ্যান্ডেলের শেষ জায়গা (🔍 চাপলে ওখানেই আসে; প্রথমবার স্ক্রিনের মাঝামাঝি)
+  function hdShowAt(fx, fy) {
     if (!hd) hd = hdMake();
     hd.w.style.display = "block";
-    hdPlace(cur.lx, cur.ly, cur.lx, mapY(cur.ly));
+    hdPlace(fx, fy, fx, mapY(fy));
+  }
+  function hdIdle() {
+    if (lastX === null) { lastX = (window.innerWidth || 360) / 2; lastY = (window.innerHeight || 640) * 0.62; }
+    hdShowAt(lastX, lastY);
+  }
+  // overlay.js: ধরে রাখা পূর্ণ হলে স্ক্রিনশটের আগে হ্যান্ডেল লুকায়, ছবি তোলা শেষ হলে আবার দেখায়
+  // (হ্যান্ডেল দেখা অবস্থায় ছবি তুললে সেটাই জুমের ছবিতে উঠে যেত)
+  window.__smHandleHide = hdHide;
+  window.__smHandleShow = function () {
+    if (!cur || !cur.off) return;
+    hdShowAt(cur.lx, cur.ly);
   };
 
   function send(type, button, x, y, buttons) {
@@ -51,19 +61,27 @@
     if (!cur) return;
     var c = cur; cur = null; clearTimeout(c.timer);
     hdHide();
+    if (c.off) { lastX = c.lx; lastY = c.ly; }
     var x = e ? e.clientX : c.lx, y = e ? e.clientY : c.ly;
     if (c.off) y = mapY(y);
     if (!c.live && c.pend && !cancel) send("move", 0, c.pend[0], c.pend[1], c.bit);
     send("up", c.btn, x, y, 0);
+    // জুম হলে মোড নিজেই বন্ধ হয়ে যায়; না হলে (ছোট টাচ/বাতিল) 🔍 মোডে থাকে, তাই হ্যান্ডেল আবার দেখাও
+    if (c.off && window.__smMode === 1 && (!c.moved || cancel)) hdIdle();
     try { B.gestureEnd(!!c.moved && !cancel); } catch (err) {}
   }
-  window.__smSetMode = function (m) { if (cur) finishCur(null, true); window.__smMode = m; };
+  window.__smSetMode = function (m) {
+    if (cur) finishCur(null, true);
+    window.__smMode = m;
+    if (m === 1 && OFF > 0) hdIdle(); else hdHide(); // 🔍 চাপার সাথে সাথেই বিন্দু + দাগ এসে যায়
+  };
 
   function onDown(e) {
     if (!window.__smMode || cur) return;
     e.preventDefault();
     var zoom = window.__smMode === 1;
     cur = { id: e.pointerId, btn: zoom ? 2 : 0, bit: zoom ? 2 : 1, sx: e.clientX, sy: e.clientY, lx: e.clientX, ly: e.clientY, moved: false, pend: null, live: false, timer: 0, off: zoom && OFF > 0 };
+    if (cur.off) hdShowAt(e.clientX, e.clientY); // আঙুল যেখানে, হ্যান্ডেল সেখানে চলে আসে
     send("down", cur.btn, e.clientX, cur.off ? mapY(e.clientY) : e.clientY, cur.bit);
     // শুরুর ~৮০ms এর নড়াচড়া ধরে রাখি, নইলে overlay.js ভাবে "ধরে রাখার আগেই টেনেছে" আর বাতিল করে দেয়
     cur.timer = setTimeout(function () {
